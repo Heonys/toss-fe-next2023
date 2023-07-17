@@ -6,26 +6,19 @@ import colors from '_tosslib/constants/colors';
 import { useEffect, useState } from 'react';
 import { createKeypad } from './remotes';
 import type { CreateKeypad } from './remotes';
-import KeypadGrid from 'components/KeypadGrid';
-import { css } from '@emotion/react';
+import InputKeypadForm from 'components/InputKeypadForm';
+import styled from '@emotion/styled';
 
-type PadName = {
-  password: boolean;
-  passwordCheck: boolean;
-};
+const KeypadContainer = styled.div`
+  position: relative;
+`;
 
 export function KeypadPage() {
   const [keyPad, setKeypad] = useState<CreateKeypad>();
-  const [isPadOpen, setIsPadOpen] = useState<PadName>({ password: false, passwordCheck: false });
 
   useEffect(() => {
     createKeypad().then(res => setKeypad(res));
   }, []);
-
-  const onFocus = (e: React.FocusEvent<HTMLInputElement, Element>) => {
-    const name = e.currentTarget.name;
-    setIsPadOpen(prev => ({ ...prev, [name]: true }));
-  };
 
   return (
     <section>
@@ -33,25 +26,15 @@ export function KeypadPage() {
         토스 보안키패드 기술과제
       </Txt>
       <Input label="비밀번호">
-        <div
-          css={css`
-            position: relative;
-          `}
-        >
-          <Input.TextField name="password" onFocus={onFocus} readOnly />
-          {keyPad && isPadOpen.password && <KeypadGrid keyPad={keyPad} />}
-        </div>
+        <KeypadContainer>
+          <InputKeypadForm name="password" keyPad={keyPad} />
+        </KeypadContainer>
       </Input>
       <Spacing size={24} />
       <Input label="비밀번호 확인">
-        <div
-          css={css`
-            position: relative;
-          `}
-        >
-          <Input.TextField name="passwordCheck" onFocus={onFocus} readOnly />
-          {keyPad && isPadOpen.passwordCheck && <KeypadGrid keyPad={keyPad} />}
-        </div>
+        <KeypadContainer>
+          <InputKeypadForm name="passwordCheck" keyPad={keyPad} />
+        </KeypadContainer>
       </Input>
       <Spacing size={24} />
       <Button css={{ width: '100%' }}>완료</Button>

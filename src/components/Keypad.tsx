@@ -1,18 +1,22 @@
-import { Button } from '_tosslib/components/Button';
 import { css } from '@emotion/react';
+import { Button } from '_tosslib/components/Button';
 
 type Props = {
   value: string;
   onClick: (e: number[]) => void;
   position: number[];
+  primary?: boolean;
 };
 
-const KeyPad = ({ value, onClick, position }: Props) => {
+const KeyPad = ({ value, onClick, position, primary = false }: Props) => {
   return (
-    <Button variant="secondary" onClick={() => onClick(position)}>
+    <Button variant={primary ? 'primary' : 'secondary'} onClick={() => onClick(position)}>
       <div
         css={css`
-          font-size: 12px;
+          font-size: 13px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         `}
         dangerouslySetInnerHTML={{ __html: value }}
       ></div>
