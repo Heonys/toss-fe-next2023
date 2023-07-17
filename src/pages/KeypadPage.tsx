@@ -8,17 +8,20 @@ import { createKeypad } from './remotes';
 import type { CreateKeypad } from './remotes';
 import InputKeypadForm from 'components/InputKeypadForm';
 import styled from '@emotion/styled';
+import { usePassword } from 'context/PasswordContext';
+import useSWR from 'swr';
 
 const KeypadContainer = styled.div`
   position: relative;
 `;
 
 export function KeypadPage() {
-  const [keyPad, setKeypad] = useState<CreateKeypad>();
-
-  useEffect(() => {
-    createKeypad().then(res => setKeypad(res));
-  }, []);
+  const { password, passwordCheck } = usePassword();
+  const { data: keyPad, mutate } = useSWR<CreateKeypad>('keypad', createKeypad, {
+    revalidateIfStale: false,
+    revalidateOnFocus: false,
+    revalidateOnReconnect: false,
+  });
 
   return (
     <section>
@@ -27,13 +30,13 @@ export function KeypadPage() {
       </Txt>
       <Input label="비밀번호">
         <KeypadContainer>
-          <InputKeypadForm name="password" keyPad={keyPad} />
+          <InputKeypadForm name="password" keyPad={keyPad} mutate={mutate} />
         </KeypadContainer>
       </Input>
       <Spacing size={24} />
       <Input label="비밀번호 확인">
         <KeypadContainer>
-          <InputKeypadForm name="passwordCheck" keyPad={keyPad} />
+          <InputKeypadForm name="passwordCheck" keyPad={keyPad} mutate={mutate} />
         </KeypadContainer>
       </Input>
       <Spacing size={24} />

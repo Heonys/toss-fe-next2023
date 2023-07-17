@@ -4,12 +4,19 @@ import { CreateKeypad } from 'pages/remotes';
 import KeyPad from './Keypad';
 import React, { SetStateAction } from 'react';
 import styled from '@emotion/styled';
+import { usePassword } from 'context/PasswordContext';
+import { KeyedMutator } from 'swr';
+import type { KeypadInputResult } from 'pages/remotes';
 
 type Props = {
   keyPad: CreateKeypad;
   setText: (text: SetStateAction<string>) => void;
   setIsOpenKeypad: (text: SetStateAction<boolean>) => void;
+  name: 'password' | 'passwordCheck';
+  mutate: KeyedMutator<CreateKeypad>;
 };
+
+export type Coords = { x: number; y: number };
 
 const Container = styled.section`
   position: absolute;
@@ -39,37 +46,45 @@ const sideButton = [
   '<div data-testid="check">확인<div>',
 ];
 
-const equals = (a: number[], b: number[]) => {
+const equals = (a: Coords, b: Coords) => {
   return JSON.stringify(a) === JSON.stringify(b);
 };
 
-export default function KeypadGrid({ keyPad: { keypad }, setText, setIsOpenKeypad }: Props) {
-  const [blank, shuffle] = keypad.functionKeys.map(keypad => [keypad.rowIndex, keypad.columnIndex]);
+export default function KeypadGrid({ keyPad: { keypad, uid }, setText, setIsOpenKeypad, name, mutate }: Props) {
+  const [blank, shuffle] = keypad.functionKeys.map(keypad => ({ x: keypad.rowIndex, y: keypad.columnIndex }));
+  const { setPassword, setPasswordCheck } = usePassword();
+  const setState = name === 'password' ? setPassword : setPasswordCheck;
 
-  const onClick = (position: number[]) => {
-    if (equals(position, blank)) {
+  const DEFAULT_RESULT = { uid: '', coords: [] };
+
+  const onClick = (coords: KeypadInputResult) => {
+    if (equals(coords, blank)) {
       return;
     }
-    if (equals(position, shuffle)) {
-      // 셔플 로직
+    if (equals(coords, shuffle)) {
+      mutate();
       return;
     }
-    setText(prev => prev + '*');
-    // 실제 좌표를 추가
+    setText(prev => (prev.length > 5 ? prev : prev + '*'));
+    setState(prev => {
+      return prev.coords.length > 5 ? prev.coords : { ...prev, x: coords.x, y: coords.y };
+    });
   };
 
-  const onSubButtonClick = (position: number[]) => {
-    switch (position[0]) {
-      case 0:
+  const onSubButtonClick = (coords: KeypadInputResult) => {
+    switch (coords.x) {
+      case 0: // <-
         setText(prev => prev.slice(0, -1));
-        // 최근 좌표 삭제
+        setState(prev => prev.slice(0, -1));
         break;
-      case 1:
+      case 1: // 전부삭제
         setText('');
-        // 좌표 전부삭제
+        setState(DEFAULT_RESULT);
         break;
-      case 2:
+      case 2: // 확인
         setIsOpenKeypad(false);
+        setText(prev => (prev.length < 6 ? '' : prev));
+        setState(prev => (prev.length < 6 ? [] : prev));
         break;
     }
   };
@@ -81,11 +96,11 @@ export default function KeypadGrid({ keyPad: { keypad }, setText, setIsOpenKeypa
           <React.Fragment key={rowIndex}>
             {row.map((svg, colIndex) => (
               <React.Fragment key={colIndex}>
-                <KeyPad position={[rowIndex, colIndex]} value={svg} onClick={onClick} />
+                <KeyPad coords={{ x: rowIndex, y: colIndex }} value={svg} onClick={onClick} />
               </React.Fragment>
             ))}
             <KeyPad
-              position={[rowIndex, 4]}
+              coords={{ x: rowIndex, y: 4 }}
               value={sideButton[rowIndex]}
               onClick={onSubButtonClick}
               primary={rowIndex === 2}

@@ -2,6 +2,8 @@ import normalize from 'emotion-normalize';
 import { Global, css } from '@emotion/react';
 import { PageLayout } from '_tosslib/components/PageLayout';
 import { KeypadPage } from 'pages/KeypadPage';
+import { PasswordContextProvider } from 'context/PasswordContext';
+import SWRConfigContext from 'context/SWRContext';
 
 export default function App() {
   return (
@@ -17,7 +19,11 @@ export default function App() {
         `}
       />
       <PageLayout>
-        <KeypadPage />
+        <SWRConfigContext>
+          <PasswordContextProvider>
+            <KeypadPage />
+          </PasswordContextProvider>
+        </SWRConfigContext>
       </PageLayout>
     </>
   );

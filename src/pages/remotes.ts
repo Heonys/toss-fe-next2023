@@ -6,7 +6,7 @@ export function createKeypad() {
   return http.post<CreateKeypad>('/api/keypad');
 }
 
-type KeypadInputResult = {
+export type KeypadInputResult = {
   uid: string;
   coords: Array<{ x: number; y: number }>;
 };
