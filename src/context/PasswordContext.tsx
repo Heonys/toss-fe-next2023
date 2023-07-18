@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, Dispatch, SetStateAction } from 'react';
-
 import type { KeypadInputResult } from 'pages/remotes';
 
 type Props = {

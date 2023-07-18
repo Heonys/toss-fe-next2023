@@ -6,7 +6,6 @@ import React, { SetStateAction } from 'react';
 import styled from '@emotion/styled';
 import { usePassword } from 'context/PasswordContext';
 import { KeyedMutator } from 'swr';
-import type { KeypadInputResult } from 'pages/remotes';
 
 type Props = {
   keyPad: CreateKeypad;
@@ -16,7 +15,7 @@ type Props = {
   mutate: KeyedMutator<CreateKeypad>;
 };
 
-export type Coords = { x: number; y: number };
+export type Coords = { uid: string; x: number; y: number };
 
 const Container = styled.section`
   position: absolute;
@@ -51,31 +50,43 @@ const equals = (a: Coords, b: Coords) => {
 };
 
 export default function KeypadGrid({ keyPad: { keypad, uid }, setText, setIsOpenKeypad, name, mutate }: Props) {
-  const [blank, shuffle] = keypad.functionKeys.map(keypad => ({ x: keypad.rowIndex, y: keypad.columnIndex }));
+  const [blank, shuffle] = keypad.functionKeys.map(keypad => ({ uid, x: keypad.rowIndex, y: keypad.columnIndex }));
   const { setPassword, setPasswordCheck } = usePassword();
   const setState = name === 'password' ? setPassword : setPasswordCheck;
 
   const DEFAULT_RESULT = { uid: '', coords: [] };
 
-  const onClick = (coords: KeypadInputResult) => {
+  const onClick = (coords: Coords) => {
     if (equals(coords, blank)) {
       return;
     }
     if (equals(coords, shuffle)) {
       mutate();
+      setText('');
+      setState(DEFAULT_RESULT);
       return;
     }
     setText(prev => (prev.length > 5 ? prev : prev + '*'));
     setState(prev => {
-      return prev.coords.length > 5 ? prev.coords : { ...prev, x: coords.x, y: coords.y };
+      return prev.coords.length > 5
+        ? prev
+        : {
+            ...prev,
+            coords: [...prev.coords, { x: coords.x, y: coords.y }],
+            uid: coords.uid,
+          };
     });
   };
 
-  const onSubButtonClick = (coords: KeypadInputResult) => {
+  const onSubButtonClick = (coords: Coords) => {
     switch (coords.x) {
       case 0: // <-
         setText(prev => prev.slice(0, -1));
-        setState(prev => prev.slice(0, -1));
+        setState(prev => {
+          const copy = { ...prev };
+          copy.coords = copy.coords.slice(0, -1);
+          return copy;
+        });
         break;
       case 1: // 전부삭제
         setText('');
@@ -84,7 +95,11 @@ export default function KeypadGrid({ keyPad: { keypad, uid }, setText, setIsOpen
       case 2: // 확인
         setIsOpenKeypad(false);
         setText(prev => (prev.length < 6 ? '' : prev));
-        setState(prev => (prev.length < 6 ? [] : prev));
+        setState(prev => {
+          const copy = { ...prev };
+          copy.coords.length < 6 ? (copy.coords = []) : null;
+          return copy;
+        });
         break;
     }
   };
@@ -96,11 +111,11 @@ export default function KeypadGrid({ keyPad: { keypad, uid }, setText, setIsOpen
           <React.Fragment key={rowIndex}>
             {row.map((svg, colIndex) => (
               <React.Fragment key={colIndex}>
-                <KeyPad coords={{ x: rowIndex, y: colIndex }} value={svg} onClick={onClick} />
+                <KeyPad coords={{ uid, x: rowIndex, y: colIndex }} value={svg} onClick={onClick} />
               </React.Fragment>
             ))}
             <KeyPad
-              coords={{ x: rowIndex, y: 4 }}
+              coords={{ uid, x: rowIndex, y: 4 }}
               value={sideButton[rowIndex]}
               onClick={onSubButtonClick}
               primary={rowIndex === 2}
