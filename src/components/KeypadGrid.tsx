@@ -5,14 +5,14 @@ import KeyPad from './Keypad';
 import React, { SetStateAction } from 'react';
 import styled from '@emotion/styled';
 import { usePassword } from 'context/PasswordContext';
-import { KeyedMutator } from 'swr';
+import { mutate } from 'swr';
 
 type Props = {
   keyPad: CreateKeypad;
+  text: string;
   setText: (text: SetStateAction<string>) => void;
   setIsOpenKeypad: (text: SetStateAction<boolean>) => void;
   name: 'password' | 'passwordCheck';
-  mutate: KeyedMutator<CreateKeypad>;
 };
 
 export type Coords = { uid: string; x: number; y: number };
@@ -21,6 +21,7 @@ const Container = styled.section`
   position: absolute;
   z-index: 100;
   width: 100%;
+  margin: auto;
   padding: 15px;
   background-color: white;
   border: solid 0.1rem #ddd;
@@ -49,19 +50,19 @@ const equals = (a: Coords, b: Coords) => {
   return JSON.stringify(a) === JSON.stringify(b);
 };
 
-export default function KeypadGrid({ keyPad: { keypad, uid }, setText, setIsOpenKeypad, name, mutate }: Props) {
+export default function KeypadGrid({ keyPad: { keypad, uid }, setText, setIsOpenKeypad, name }: Props) {
   const [blank, shuffle] = keypad.functionKeys.map(keypad => ({ uid, x: keypad.rowIndex, y: keypad.columnIndex }));
   const { setPassword, setPasswordCheck } = usePassword();
   const setState = name === 'password' ? setPassword : setPasswordCheck;
 
   const DEFAULT_RESULT = { uid: '', coords: [] };
 
-  const onClick = (coords: Coords) => {
+  const onClick = async (coords: Coords) => {
     if (equals(coords, blank)) {
       return;
     }
     if (equals(coords, shuffle)) {
-      mutate();
+      mutate(name);
       setText('');
       setState(DEFAULT_RESULT);
       return;

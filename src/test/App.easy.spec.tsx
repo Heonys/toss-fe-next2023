@@ -104,7 +104,7 @@ describe('App easy', () => {
 
     userEvent.click(await screen.findByLabelText<HTMLInputElement>(`비밀번호`));
     userEvent.type(await screen.findByLabelText<HTMLInputElement>(`비밀번호`), 'test');
-    expect(await screen.findByLabelText<HTMLInputElement>(`비밀번호`)).toHaveLength(0);
+    expect((await screen.findByLabelText<HTMLInputElement>(`비밀번호`)).value).toHaveLength(0);
   });
 
   test('"전체삭제" 버튼을 누르면 값이 모두 삭제된다', async () => {

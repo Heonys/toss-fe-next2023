@@ -1,6 +1,5 @@
 import { css } from '@emotion/react';
 import { Button } from '_tosslib/components/Button';
-import { KeypadInputResult } from 'pages/remotes';
 import { Coords } from './KeypadGrid';
 
 type Props = {
